@@ -50,7 +50,7 @@ static unsigned long *h2p_vip_mix_addr=NULL;
 static void *lw_axi_virtual_base=NULL;
 static void *axi_virtual_base=NULL;
 static int fd;
-static void *h2p_lw_chaos_shift_addr=NULL;
+static void *h2p_lw_h2f_addr=NULL;
 
 
 
@@ -82,6 +82,34 @@ void    VIP_FR_Config(int Width, int Height){
 		
 }
 
+void    VIP_FR_Start(int Width, int Height){
+	int word = Width*Height;
+	int cycle = Width*Height;
+	int interlace = 0;
+	
+	// stop
+	h2p_vip_frame_reader0_addr[0]=0x00; // stop
+	printf("Width=%d\r\n",Width);
+	printf("Height=%d\r\n",Height);
+	// configure frame 0
+	h2p_vip_frame_reader0_addr[4]=DEMO_VGA_FRAME0_ADDR+FR0_FRAME0_OFFSET; // // frame0 base address
+	h2p_vip_frame_reader0_addr[5]=word; // frame0 word
+	h2p_vip_frame_reader0_addr[6]=cycle; //  The number of single-cycle color patterns to read for the frame
+	h2p_vip_frame_reader0_addr[8]=Width; // frame0 width  
+	h2p_vip_frame_reader0_addr[9]=Height; // frame0 height
+	h2p_vip_frame_reader0_addr[10]=interlace; // frame0 interlace
+
+	h2p_vip_frame_reader0_addr[0]=0x01; //start
+
+	// select active frame
+	h2p_vip_frame_reader0_addr[3]=0; // active frame 0 was set
+		
+}
+
+void    VIP_FR_Stop(){
+	h2p_vip_frame_reader0_addr[0]=0x00; // stop	
+}
+
 /////////////////////////////////////////////////////////
 // VIP MIX
 void    VIP_MIX_Config(void){
@@ -98,7 +126,25 @@ void    VIP_MIX_Config(void){
 	
     h2p_vip_mix_addr[0]=0x01; //start
 }
+void    VIP_MIX_Start(void){
+ 	h2p_vip_mix_addr[0]=0x00; //stop
+	// din0 is layer 0, background, fixe	
+	// layer 2 (log)
+	h2p_vip_mix_addr[2]=130; 
+	h2p_vip_mix_addr[3]=770;
+	h2p_vip_mix_addr[4]=0x00;
+	
+	h2p_vip_mix_addr[5]=0;//45;//0;//(SCREEN_WIDTH-VIDEO_WIDTH)/2;//layer1 x offset
+	h2p_vip_mix_addr[6]=0;//0;//(SCREEN_HEIGHT-VIDEO_HEIGHT)/2;//layer1 y offset
+	h2p_vip_mix_addr[7]=0x01;//set layer 1 active	
+	
+    h2p_vip_mix_addr[0]=0x01; //start
 
+}
+
+void    VIP_MIX_Stop(void){
+    h2p_vip_mix_addr[0]=0x00; //stop
+}
 
 
 
@@ -188,14 +234,19 @@ void PIC_Move(void){
    VIP_MIX_Move(nlayer, fr0_x, fr0_y);
 }
 	
-
+int resetDisplay(){
+	unsigned char pixbitcount;
+	unsigned int width,height;	
+	GetBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
+	return 0;
+}
 
 int showBMP() {
 
 	unsigned char pixbitcount;
 	unsigned int width,height;
 
-	*(uint32_t *)h2p_lw_chaos_shift_addr = *(uint32_t *)h2p_lw_chaos_shift_addr | MASK_BIT(5);
+	//*(uint32_t *)h2p_lw_h2f_addr = 0;//*(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(5);
 	VIP_MIX_Config();
 	VIP_FR_Config(VIDEO_WIDTH, VIDEO_HEIGHT);
 
@@ -204,6 +255,7 @@ int showBMP() {
 	 //GetBmpData(&pixbitcount,&width,&height, "demo1.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
 	 GetBmpData(&pixbitcount,&width,&height, "lenna.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
 	 StoreBmpData(&pixbitcount,&width,&height, "lenna.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET+BMP_ORG_RAW_ADDRESS);
+
 	 /*
 	 while(1)
 	 {
@@ -217,7 +269,7 @@ int showBMP() {
 
 int saveBMP() 
 {
-	*(uint32_t *)h2p_lw_chaos_shift_addr = *(uint32_t *)h2p_lw_chaos_shift_addr | MASK_BIT(5);
+	//*(uint32_t *)h2p_lw_h2f_addr = 0;//*(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(5);
 	GenBmpFile(h2p_memory_addr+FR0_FRAME0_OFFSET+BMP_ENC_RAW_ADDRESS,"lenna_after.bmp");
 	return( 0 );
 }
@@ -247,13 +299,73 @@ int initBMP()
 	h2p_vip_frame_reader0_addr= lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + ALT_VIP_VFR_0_BASE ) & ( unsigned long)( HW_REGS_MASK ) );	
 	h2p_memory_addr=axi_virtual_base + ( ( unsigned long  )( DEMO_VGA_FRAME0_ADDR) & ( unsigned long)( HW_FPGA_AXI_MASK ) );
 	h2p_vip_mix_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + ALT_VIP_MIX_0_BASE ) & ( unsigned long)( HW_REGS_MASK ) );		
- 	//h2p_lw_chaos_shift_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
-	h2p_lw_chaos_shift_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
-	printf( "*(uint32_t *)h2p_lw_chaos_shift_addr = %d\n",*(uint32_t *)h2p_lw_chaos_shift_addr );
-	*(uint32_t *)h2p_lw_chaos_shift_addr = *(uint32_t *)h2p_lw_chaos_shift_addr | MASK_BIT(5);
-	printf( "*(uint32_t *)h2p_lw_chaos_shift_addr = %d\n",*(uint32_t *)h2p_lw_chaos_shift_addr );
-	printf( "h2p_lw_chaos_shift_addr = %x\n",h2p_lw_chaos_shift_addr);
-	printf("h2p_lw_chaos_shift_addr = %x\n",h2p_lw_chaos_shift_addr);
+ 	//h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+	h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+	printf( "*(uint32_t *)h2p_lw_h2f_addr = %d\n",*(uint32_t *)h2p_lw_h2f_addr );
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(5);
+	printf( "*(uint32_t *)h2p_lw_h2f_addr = %d\n",*(uint32_t *)h2p_lw_h2f_addr );
+	printf( "h2p_lw_h2f_addr = %x\n",h2p_lw_h2f_addr);
+	printf("h2p_lw_h2f_addr = %x\n",h2p_lw_h2f_addr);
+	return 0;
+}
+
+int Ram4HPS()
+{
+	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(0);
+	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(1);
+	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(2);
+	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(4);
+	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(5);
+	*(uint32_t *)h2p_lw_h2f_addr = 0;
+	VIP_MIX_Stop();
+	VIP_FR_Stop();	
+	return 0;
+}
+
+int Ram4FPGA()
+{
+	VIP_MIX_Stop();
+	VIP_FR_Stop();
+	usleep(500*1000);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(5);
+	usleep(500*1000);
+	
+	return 0;
+}
+
+int resetFPGA()
+{
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(0);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(1);
+
+	
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(0);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(1);
+	
+	
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(0);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(1);
+	
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(2);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(2);	
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(2);	
+	
+	return 0;
+}
+
+int Enable_encrypt()
+{
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(3);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(4);
+	
+	return 0;
+}
+
+int Enable_decrypt()
+{
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(3);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(4);
+	
 	return 0;
 }
 
@@ -263,7 +375,7 @@ int deinitBMP()
 	h2p_vip_frame_reader0_addr = NULL;
 	h2p_memory_addr = NULL;
 	h2p_vip_mix_addr = NULL;
-	h2p_lw_chaos_shift_addr = NULL;
+	h2p_lw_h2f_addr = NULL;
 	
 	 if( munmap( axi_virtual_base, HW_REGS_SPAN ) != 0 ) {
 		printf( "ERROR: munmap() failed...\n" );
