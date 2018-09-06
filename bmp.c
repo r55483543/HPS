@@ -237,6 +237,8 @@ void PIC_Move(void){
 int resetDisplay(){
 	unsigned char pixbitcount;
 	unsigned int width,height;	
+	VIP_MIX_Config();
+	VIP_FR_Config(VIDEO_WIDTH, VIDEO_HEIGHT);
 	GetBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
 	return 0;
 }
