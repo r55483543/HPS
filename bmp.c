@@ -247,7 +247,7 @@ int showBMP() {
 
 	unsigned char pixbitcount;
 	unsigned int width,height;
-
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
 	//*(uint32_t *)h2p_lw_h2f_addr = 0;//*(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(5);
 	VIP_MIX_Config();
 	VIP_FR_Config(VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -268,6 +268,19 @@ int showBMP() {
 	 return( 0 );
 }
 
+int resetSDRAM()
+{
+	VIP_MIX_Stop();
+	VIP_FR_Stop();
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
+	usleep(500*1000);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(6);
+	usleep(500*1000);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
+	
+	return 0;
+}
 
 int saveBMP() 
 {
@@ -304,6 +317,7 @@ int initBMP()
  	//h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 	h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 	printf( "*(uint32_t *)h2p_lw_h2f_addr = %d\n",*(uint32_t *)h2p_lw_h2f_addr );
+	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
 	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(5);
 	printf( "*(uint32_t *)h2p_lw_h2f_addr = %d\n",*(uint32_t *)h2p_lw_h2f_addr );
 	printf( "h2p_lw_h2f_addr = %x\n",h2p_lw_h2f_addr);
@@ -318,9 +332,11 @@ int Ram4HPS()
 	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(2);
 	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(4);
 	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(5);
-	*(uint32_t *)h2p_lw_h2f_addr = 0;
 	VIP_MIX_Stop();
-	VIP_FR_Stop();	
+	VIP_FR_Stop();		
+	*(uint32_t *)h2p_lw_h2f_addr = 64;
+	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
+
 	return 0;
 }
 
@@ -328,6 +344,7 @@ int Ram4FPGA()
 {
 	VIP_MIX_Stop();
 	VIP_FR_Stop();
+	
 	usleep(500*1000);
 	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(5);
 	usleep(500*1000);

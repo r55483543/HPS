@@ -18,6 +18,7 @@ int Ram4HPS();
 int Ram4FPGA();
 int resetFPGA();
 int Enable_encrypt();
+int resetSDRAM();
 
 int main()
 {
@@ -39,6 +40,7 @@ int main()
 		printf("10:Ram4FPGA\n");
 		printf("11:encrypt\n");
 		printf("12:resetDisplay\n");
+		printf("13:resetSDRAM\n");
 		printf("0:Exit\n");
 		printf("===================\n");
 		scanf("%d",&enter);
@@ -80,6 +82,9 @@ int main()
 			case 12:
 				Ram4HPS();
 				resetDisplay();
+				break;
+			case 13:
+				resetSDRAM();
 				break;				
 			case 0:
 				return 0;
