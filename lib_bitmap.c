@@ -42,6 +42,8 @@ int GenBmpFile(unsigned char *pData, const char *filename)
     unsigned int bmppitch = (((bmpfile.biInfo.bmiHeader.biWidth)*(bmpfile.biInfo.bmiHeader.biBitCount) + 31) >> 5) << 2; 
   
   printf("bmpfile.biInfo.bmiHeader.biHeight = %d\n",bmpfile.biInfo.bmiHeader.biHeight);
+  printf("bmpfile.biInfo.bmiHeader.biWidth = %d\n",bmpfile.biInfo.bmiHeader.biWidth);
+  printf("bmppitch = %d\n",bmppitch);
     fwrite(&(bmpfile.bfHeader), sizeof(BITMAPFILEHEADER), 1, fp);  
     fwrite(&(bmpfile.biInfo.bmiHeader), sizeof(BITMAPINFOHEADER), 1, fp);  
   
@@ -49,6 +51,8 @@ int GenBmpFile(unsigned char *pData, const char *filename)
     memset(pEachLinBuf, 0, bmppitch);  
     unsigned char BytePerPix = (bmpfile.biInfo.bmiHeader.biBitCount) >> 3;  
     unsigned int pitch = (bmpfile.biInfo.bmiHeader.biWidth) * BytePerPix;  
+	printf("BytePerPix = %d\n",BytePerPix);
+	printf("pitch = %d\n",pitch);
     if(pEachLinBuf)  
     {  
         int h,w;  
@@ -59,7 +63,12 @@ int GenBmpFile(unsigned char *pData, const char *filename)
                 //copy by a pixel  
                 pEachLinBuf[w*BytePerPix+0] = pData[h*pitch + w*BytePerPix + 0];  
                 pEachLinBuf[w*BytePerPix+1] = pData[h*pitch + w*BytePerPix + 1];  
-                pEachLinBuf[w*BytePerPix+2] = pData[h*pitch + w*BytePerPix + 2];  
+                pEachLinBuf[w*BytePerPix+2] = pData[h*pitch + w*BytePerPix + 2]; 
+				//if(pEachLinBuf[w*BytePerPix+0] != 0 || pEachLinBuf[w*BytePerPix+1] != 0 || pEachLinBuf[w*BytePerPix+2] != 0)
+					//printf("h=%d ,w =%d ,pEachLinBuf0=%x\n",h,w,*(pEachLinBuf+(w*BytePerPix+0)));
+//printf("h=%d ,w =%d ,pEachLinBuf[w*BytePerPix+0] =%x\n",h,w,pEachLinBuf[w*BytePerPix+0]);
+//printf("h=%d ,w =%d ,pEachLinBuf[w*BytePerPix+1] =%x\n",h,w,pEachLinBuf[w*BytePerPix+1]);
+//printf("h=%d ,w =%d ,pEachLinBuf[w*BytePerPix+2] =%x\n",h,w,pEachLinBuf[w*BytePerPix+2]);				
             }  
             fwrite(pEachLinBuf, bmppitch, 1, fp);  
               
@@ -347,6 +356,8 @@ unsigned char StoreBmpData(unsigned char *bitCountPerPix, unsigned int *width, u
 				//printf("h=%d ,w =%d ,pEachLinBuf0=%x\n",h,w,*(pEachLinBuf+(w*BytePerPix+0)));
 				//printf("h=%d ,w =%d ,pEachLinBuf1=%x\n",h,w,*(pEachLinBuf+(w*BytePerPix+1)));
 				//printf("h=%d ,w =%d ,pEachLinBuf2=%x\n",h,w,*(pEachLinBuf+(w*BytePerPix+2)));
+				//if(pdata[h*pitch + w*BytePerPix + 0] != 0 || pdata[h*pitch + w*BytePerPix + 1] != 0 || pdata[h*pitch + w*BytePerPix + 2] != 0)
+					//printf("h=%d ,w =%d \n",h,w);
             }  
         }  
         free(pEachLinBuf);  

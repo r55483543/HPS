@@ -20,37 +20,14 @@
 #include  "lib_bitmap.h"
 
 
-#define SDRAM_BASE_ADDR 0
-#define ALT_VIP_SOFTWARE_RESET_N_BASE 0x00000200   //
-
-//#define ALT_STM_OFST (0xfc000000)
-//#define ALT_LWFPGASLVS_OFST (0xff200000)  // axi_lw_master
-
-#define ALT_AXI_FPGASLVS_OFST (0xC0000000)  // axi_master
-#define HW_FPGA_AXI_SPAN (0x40000000)  // Bridge span
-#define HW_FPGA_AXI_MASK ( HW_FPGA_AXI_SPAN - 1 )
-
-#define ALT_GPIO1_BASE_OFST   (0xFF709000)
-
-#define HW_REGS_BASE (ALT_STM_OFST )
-#define HW_REGS_SPAN (0x04000000 )
-#define HW_REGS_MASK (HW_REGS_SPAN - 1 )
-
-
-#define DEMO_VGA_FRAME0_ADDR					                0x00000000//0x00080000 //0x00100000  //on chip memory base
-#define FR0_FRAME0_OFFSET							(0x00000000)
-
-
-
-
-static unsigned long *h2p_lw_axi_addr=NULL;
-static unsigned long *h2p_vip_frame_reader0_addr=NULL;
-static unsigned long *h2p_memory_addr=NULL;
-static unsigned long *h2p_vip_mix_addr=NULL;
-static void *lw_axi_virtual_base=NULL;
-static void *axi_virtual_base=NULL;
-static int fd;
-static void *h2p_lw_h2f_addr=NULL;
+unsigned long *h2p_lw_axi_addr=NULL;
+unsigned long *h2p_vip_frame_reader0_addr=NULL;
+unsigned long *h2p_memory_addr=NULL;
+unsigned long *h2p_vip_mix_addr=NULL;
+void *lw_axi_virtual_base=NULL;
+void *axi_virtual_base=NULL;
+int fd;
+void *h2p_lw_h2f_addr=NULL;
 
 
 
@@ -236,7 +213,11 @@ void PIC_Move(void){
 	
 int resetDisplay(){
 	unsigned char pixbitcount;
-	unsigned int width,height;	
+	unsigned int width,height;
+	
+	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
+	setH2FcontrolBit(BIT_SDRAM_FPGA,0);
+	
 	VIP_MIX_Config();
 	VIP_FR_Config(VIDEO_WIDTH, VIDEO_HEIGHT);
 	GetBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
@@ -247,16 +228,18 @@ int showBMP() {
 
 	unsigned char pixbitcount;
 	unsigned int width,height;
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
-	//*(uint32_t *)h2p_lw_h2f_addr = 0;//*(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(5);
+	
+	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
+	setH2FcontrolBit(BIT_SDRAM_FPGA,0);
+
 	VIP_MIX_Config();
 	VIP_FR_Config(VIDEO_WIDTH, VIDEO_HEIGHT);
 
-         usleep(500*1000);
+    usleep(500*1000);
 	
 	 //GetBmpData(&pixbitcount,&width,&height, "demo1.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
 	 GetBmpData(&pixbitcount,&width,&height, "lenna.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
-	 StoreBmpData(&pixbitcount,&width,&height, "lenna.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET+BMP_ORG_RAW_ADDRESS);
+
 
 	 /*
 	 while(1)
@@ -268,24 +251,13 @@ int showBMP() {
 	 return( 0 );
 }
 
-int resetSDRAM()
-{
-	VIP_MIX_Stop();
-	VIP_FR_Stop();
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
-	usleep(500*1000);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(6);
-	usleep(500*1000);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
-	
-	return 0;
-}
 
 int saveBMP() 
 {
-	//*(uint32_t *)h2p_lw_h2f_addr = 0;//*(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(5);
-	GenBmpFile(h2p_memory_addr+FR0_FRAME0_OFFSET+BMP_ENC_RAW_ADDRESS,"lenna_after.bmp");
+	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
+	setH2FcontrolBit(BIT_SDRAM_FPGA,0);
+	
+	GenBmpFile(h2p_memory_addr+FR0_FRAME0_OFFSET,"lenna_after.bmp");
 	return( 0 );
 }
 
@@ -309,84 +281,68 @@ int initBMP()
 		return( 1 );
 	}
 	
-	printf("lw_axi_virtual_base = %x\n",lw_axi_virtual_base);
 	h2p_lw_axi_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST) & ( unsigned long)( HW_REGS_MASK ) );;
 	h2p_vip_frame_reader0_addr= lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + ALT_VIP_VFR_0_BASE ) & ( unsigned long)( HW_REGS_MASK ) );	
 	h2p_memory_addr=axi_virtual_base + ( ( unsigned long  )( DEMO_VGA_FRAME0_ADDR) & ( unsigned long)( HW_FPGA_AXI_MASK ) );
 	h2p_vip_mix_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + ALT_VIP_MIX_0_BASE ) & ( unsigned long)( HW_REGS_MASK ) );		
- 	//h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
-	h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
-	printf( "*(uint32_t *)h2p_lw_h2f_addr = %d\n",*(uint32_t *)h2p_lw_h2f_addr );
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(5);
-	printf( "*(uint32_t *)h2p_lw_h2f_addr = %d\n",*(uint32_t *)h2p_lw_h2f_addr );
-	printf( "h2p_lw_h2f_addr = %x\n",h2p_lw_h2f_addr);
-	printf("h2p_lw_h2f_addr = %x\n",h2p_lw_h2f_addr);
+ 	h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+
+	setH2FcontrolBitToZero();
+	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
+	setH2FcontrolBit(BIT_SDRAM_FPGA,0);
+	
+	printf( "H2FcontrolBit = %d\n",*(uint32_t *)h2p_lw_h2f_addr );
+
 	return 0;
 }
 
 int Ram4HPS()
 {
-	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(0);
-	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(1);
-	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(2);
-	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(4);
-	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(5);
 	VIP_MIX_Stop();
-	VIP_FR_Stop();		
-	*(uint32_t *)h2p_lw_h2f_addr = 64;
-	//*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(6);
+	VIP_FR_Stop();
+	
+	setH2FcontrolBitToZero();
+	resetSDRAM();
+	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
+	setH2FcontrolBit(BIT_SDRAM_FPGA,0);
 
 	return 0;
 }
 
 int Ram4FPGA()
 {
+	unsigned char pixbitcount;
+	unsigned int width,height;
+	//GetBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
+	 StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
+	 StoreBmpData(&pixbitcount,&width,&height, "black321.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);	
 	VIP_MIX_Stop();
 	VIP_FR_Stop();
 	
 	usleep(500*1000);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(5);
+	setH2FcontrolBit(BIT_SDRAM_FPGA,1);
 	usleep(500*1000);
 	
 	return 0;
 }
 
-int resetFPGA()
-{
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(0);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(1);
 
-	
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(0);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(1);
-	
-	
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(0);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(1);
-	
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(2);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(2);	
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(2);	
+int resetSDRAM()
+{
+	VIP_MIX_Stop();
+	VIP_FR_Stop();
+
+	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
+	usleep(500*1000);
+	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,0);
+	usleep(500*1000);
+	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
+
 	
 	return 0;
 }
 
-int Enable_encrypt()
-{
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(3);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(4);
-	
-	return 0;
-}
 
-int Enable_decrypt()
-{
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr | MASK_BIT(3);
-	*(uint32_t *)h2p_lw_h2f_addr = *(uint32_t *)h2p_lw_h2f_addr & ~MASK_BIT(4);
-	
-	return 0;
-}
 
 int deinitBMP()
 {

@@ -3,28 +3,12 @@
 #include <stdlib.h>
 #include  "disp_config.h"
 
-int showBMP();
-int genChaos();
-int socket_server();
-int saveBMP();
-void initBMP();
-void deinitBMP();
-int resetDisplay();
-void VIP_FR_Start(int Width, int Height);
-void VIP_FR_Stop();
-void VIP_MIX_Start(void);
-void VIP_MIX_Stop(void);
-int Ram4HPS();
-int Ram4FPGA();
-int resetFPGA();
-int Enable_encrypt();
-int resetSDRAM();
 
 int main()
 {
 	int enter;
 	initBMP();
-	resetDisplay();	
+	//resetDisplay();	
 	while(1)
 	{
 		printf("===================\n");
@@ -41,6 +25,7 @@ int main()
 		printf("11:encrypt\n");
 		printf("12:resetDisplay\n");
 		printf("13:resetSDRAM\n");
+		printf("14:decrypt\n");
 		printf("0:Exit\n");
 		printf("===================\n");
 		scanf("%d",&enter);
@@ -80,11 +65,14 @@ int main()
 				resetFPGA();
 				break;
 			case 12:
-				Ram4HPS();
 				resetDisplay();
 				break;
 			case 13:
 				resetSDRAM();
+				break;	
+			case 14:
+				Enable_decrypt();
+				resetFPGA();
 				break;				
 			case 0:
 				return 0;
