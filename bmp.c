@@ -254,10 +254,27 @@ int showBMP() {
 
 int saveBMP() 
 {
+	FILE *fp;
+	int i;
+	unsigned char *pAddr=NULL;
 	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
 	setH2FcontrolBit(BIT_SDRAM_FPGA,0);
 	
-	GenBmpFile(h2p_memory_addr+FR0_FRAME0_OFFSET,"lenna_after.bmp");
+	GenBmpFile(h2p_memory_addr+FR0_FRAME0_OFFSET+0x80000,"lenna_after.bmp");
+	pAddr = h2p_memory_addr;
+	fp = fopen("ram.txt","wb");		
+	if( NULL == fp)
+	{
+		printf(" open file fail");
+		return 1;
+	}
+	for(i = 0; i<1024*1024*5/16;i++)
+	{		
+		fprintf(fp,"0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\r\n",*pAddr,*(pAddr+1),*(pAddr+2),*(pAddr+3)
+		,*(pAddr+4),*(pAddr+5),*(pAddr+6),*(pAddr+7),*(pAddr+8),*(pAddr+9),*(pAddr+10),*(pAddr+11),*(pAddr+12),*(pAddr+13),*(pAddr+14),*(pAddr+15));
+		pAddr += 16;
+	}
+	fclose(fp);
 	return( 0 );
 }
 
@@ -313,9 +330,18 @@ int Ram4FPGA()
 {
 	unsigned char pixbitcount;
 	unsigned int width,height;
+	int i;
+	unsigned char *pAddress=NULL;
+	pAddress = h2p_memory_addr;
 	//GetBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
-	 StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
-	 StoreBmpData(&pixbitcount,&width,&height, "black321.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);	
+	for(i=0;i<1024*1024*64;i++)
+	{
+		*pAddress = 0x0;
+		pAddress +=1;
+	}
+	 //StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET+0x100000);
+	 //StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
+	 StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET+0x4);	
 	VIP_MIX_Stop();
 	VIP_FR_Stop();
 	
