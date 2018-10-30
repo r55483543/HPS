@@ -268,7 +268,7 @@ int saveBMP()
 		printf(" open file fail");
 		return 1;
 	}
-	for(i = 0; i<1024*1024*5/16;i++)
+	for(i = 0; i<1024*1024*10/16;i++)
 	{		
 		fprintf(fp,"0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\r\n",*pAddr,*(pAddr+1),*(pAddr+2),*(pAddr+3)
 		,*(pAddr+4),*(pAddr+5),*(pAddr+6),*(pAddr+7),*(pAddr+8),*(pAddr+9),*(pAddr+10),*(pAddr+11),*(pAddr+12),*(pAddr+13),*(pAddr+14),*(pAddr+15));
@@ -334,7 +334,7 @@ int Ram4FPGA()
 	unsigned char *pAddress=NULL;
 	pAddress = h2p_memory_addr;
 	//GetBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
-	for(i=0;i<1024*1024*64;i++)
+	for(i=0;i<1024*1024*10;i++)
 	{
 		*pAddress = 0x0;
 		pAddress +=1;
