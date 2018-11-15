@@ -28,12 +28,14 @@ unsigned char GetBmpData(unsigned char *bitCountPerPix, unsigned int *width, uns
 void FreeBmpData(unsigned char *pdata); 
 int GenBmpFile(unsigned char *pData, const char *filename)  
 {  
-    FILE *fp = fopen(filename, "wb");  
+    FILE *fp = fopen(filename, "wb"); 
+	int i,j;
+	unsigned int bmpsize = 0;
     if(!fp)  
     {  
         printf("fopen failed \n");  
         return 0;  
-    } 
+    }	
 	printf("pData = %x\n",pData);
 	BITMAPFILE bmpfile; 
 	memset((void *)&(bmpfile),0,sizeof(BITMAPFILE));
@@ -46,7 +48,32 @@ int GenBmpFile(unsigned char *pData, const char *filename)
   printf("bmppitch = %d\n",bmppitch);
     fwrite(&(bmpfile.bfHeader), sizeof(BITMAPFILEHEADER), 1, fp);  
     fwrite(&(bmpfile.biInfo.bmiHeader), sizeof(BITMAPINFOHEADER), 1, fp);  
-  
+	
+	//printf("*(pData) = %x\n",*(char *)(pData+4194304));
+
+	bmpsize = bmpfile.biInfo.bmiHeader.biSizeImage;
+	printf("bmpsize = %d\n",bmpsize);
+	i = 0;
+	j = 0;
+	for(i=0; i<bmpsize/BMP_RAW_2048BYTE; i++)
+	{
+		//memset(pEach2048Buf, 0, bmpblock);
+		//fread(pEach2048Buf, bmpblock, 1, pf);
+		//memcpy((void *)(memory_vip_frame+i*BMP_RAW_4096BYTE/4 + j*BMP_RAW_1024BYTE*256/4),(void *)pEach2048Buf,bmpblock);
+		if(i!= 0 && i%64 == 0)
+			j++;
+		memcpy((void *)(pData+ BMP_RAW_8MBYTE +i*BMP_RAW_2048BYTE),(void *)(pData + BMP_RAW_4MBYTE + i*BMP_RAW_4096BYTE + j*BMP_RAW_1024BYTE*256),BMP_RAW_2048BYTE*2);
+		//printf("j= %d i= %d *(pData) = %x\n",j,i,*(char *)(pData + BMP_RAW_4MBYTE + i*BMP_RAW_4096BYTE+j*BMP_RAW_1024BYTE*256) );
+	}
+    unsigned char *pBmpBuf = (unsigned char*)malloc(bmpsize);  
+    memset(pBmpBuf, 0, bmpsize);
+	if(pBmpBuf)
+	{
+		memcpy((void *)pBmpBuf, (void *)(pData+ BMP_RAW_8MBYTE), bmpsize);
+		fwrite(pBmpBuf, bmpsize, 1, fp);
+		free(pBmpBuf);
+	}
+/*	
     unsigned char *pEachLinBuf = (unsigned char*)malloc(bmppitch);  
     memset(pEachLinBuf, 0, bmppitch);  
     unsigned char BytePerPix = (bmpfile.biInfo.bmiHeader.biBitCount) >> 3;  
@@ -74,7 +101,8 @@ int GenBmpFile(unsigned char *pData, const char *filename)
               
         }  
         free(pEachLinBuf);  
-    }  
+    }
+	*/
     fclose(fp);  
     return 1;  
 }  
@@ -283,6 +311,7 @@ unsigned char GetBmpData(unsigned char *bitCountPerPix, unsigned int *width, uns
 unsigned char StoreBmpData(unsigned char *bitCountPerPix, unsigned int *width, unsigned int *height, const char* filename,unsigned long *memory_vip_frame)  
 {  
 	unsigned int bmpsize = 0;
+	int i,j;
     FILE *pf = fopen(filename, "rb");  
     if(!pf)  
     {  
@@ -324,6 +353,39 @@ unsigned char StoreBmpData(unsigned char *bitCountPerPix, unsigned int *width, u
     } 
 	bmpsize = bmpfile.biInfo.bmiHeader.biSizeImage;
 	printf("bmpsize = %d\n",bmpsize);
+    //char *pTemp=NULL;
+    int bmpblock = BMP_RAW_2048BYTE; 
+	printf("bmpblock = %d\n",bmpblock);	
+	
+    //char *pdata = (char*)malloc(bmpsize);
+	//printf("sizeof(pdata) = %d \n",sizeof(pdata));
+    /*
+	if (pdata == NULL)
+    {
+		printf ("pdata failed to allocation memory\r\n");
+		return 1;
+	}
+	*/
+    char *pEach2048Buf = (char*)malloc(bmpblock); 
+	printf("sizeof(char) = %d \n",sizeof(char));
+    printf("pdata start \n");
+	if(pEach2048Buf)  
+    {  
+		//for(i=0; i<bmpsize/bmpblock; i++)
+		i = 0;
+		j = 0;
+		while(!feof(pf))
+		{
+			memset(pEach2048Buf, 0, bmpblock);
+			fread(pEach2048Buf, bmpblock, 1, pf);
+			memcpy((void *)(memory_vip_frame+i*BMP_RAW_4096BYTE/4 + j*BMP_RAW_1024BYTE*256/4),(void *)pEach2048Buf,bmpblock);
+			i++;
+			if(i%64 == 0)
+				j++;
+		}	
+        free(pEach2048Buf);  
+    }	
+	/*
     unsigned char *pTemp=NULL;
     unsigned int bmppicth = (((*width)*(*bitCountPerPix) + 31) >> 5) << 2; 
 	printf("bmppicth = %d\n",bmppicth);
@@ -361,16 +423,16 @@ unsigned char StoreBmpData(unsigned char *bitCountPerPix, unsigned int *width, u
             }  
         }  
         free(pEachLinBuf);  
-    }  
+    }*/  
     fclose(pf);
     printf("pdata end \n");   
     
-    pTemp=pdata;
+    //pTemp=pdata;
 
-    memcpy((void *)memory_vip_frame,(void *)pTemp,bmpsize);
+    //memcpy((void *)memory_vip_frame,(void *)pTemp,bmpsize);
 	printf("memory_vip_frame = %x\n",memory_vip_frame);
-	if(pdata)
-		free(pdata);
+	//if(pdata)
+	//	free(pdata);
     return 0;  
 }
 

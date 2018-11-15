@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -260,7 +261,7 @@ int saveBMP()
 	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
 	setH2FcontrolBit(BIT_SDRAM_FPGA,0);
 	
-	GenBmpFile(h2p_memory_addr+FR0_FRAME0_OFFSET+0x80000,"lenna_after.bmp");
+	GenBmpFile(h2p_memory_addr+FR0_FRAME0_OFFSET,"lenna_after.bmp");
 	pAddr = h2p_memory_addr;
 	fp = fopen("ram.txt","wb");		
 	if( NULL == fp)
@@ -268,7 +269,7 @@ int saveBMP()
 		printf(" open file fail");
 		return 1;
 	}
-	for(i = 0; i<1024*1024*10/16;i++)
+	for(i = 0; i<1024*1024*15/16;i++)
 	{		
 		fprintf(fp,"0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\r\n",*pAddr,*(pAddr+1),*(pAddr+2),*(pAddr+3)
 		,*(pAddr+4),*(pAddr+5),*(pAddr+6),*(pAddr+7),*(pAddr+8),*(pAddr+9),*(pAddr+10),*(pAddr+11),*(pAddr+12),*(pAddr+13),*(pAddr+14),*(pAddr+15));
@@ -330,18 +331,42 @@ int Ram4FPGA()
 {
 	unsigned char pixbitcount;
 	unsigned int width,height;
-	int i;
+	int i,n;
 	unsigned char *pAddress=NULL;
 	pAddress = h2p_memory_addr;
 	//GetBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
+	/*
 	for(i=0;i<1024*1024*10;i++)
 	{
 		*pAddress = 0x0;
 		pAddress +=1;
 	}
+	*/
+	srand(time(NULL));
+	/*
+	memset((void *)pAddress,0,1024*1024*60);
+	
+	for(i=0;i<1024*1024*10/128;i++)
+	{
+		
+		n = (rand()%100+1);
+		memset((void *)pAddress,n,128);
+		pAddress = pAddress + 128;
+	}
+	
 	 //StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET+0x100000);
 	 //StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
-	 StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET+0x4);	
+	 memset((void *)pAddress,0,1024*1024*60);
+	 for(i=0;i<1024*1024*4/BMP_RAW_2048BYTE;i++)
+	{
+		
+		//n = (rand()%100+1);
+		
+		memset((void *)pAddress,i,BMP_RAW_2048BYTE);
+		pAddress = pAddress + BMP_RAW_2048BYTE;
+	}*/
+	memset((void *)pAddress,0,1024*1024*60);
+	 StoreBmpData(&pixbitcount,&width,&height, "lenna.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET/*+0x4*/);	
 	VIP_MIX_Stop();
 	VIP_FR_Stop();
 	

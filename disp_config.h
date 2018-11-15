@@ -44,6 +44,14 @@
 #define BMP_ORG_RAW_ADDRESS	(0x500000) //(0xA01000)
 #define BMP_ENC_RAW_ADDRESS	(0x500000)
 
+#define BMP_RAW_1024BYTE	(1024)
+#define BMP_RAW_2048BYTE	(2048)
+#define BMP_RAW_4096BYTE	(4096)
+#define BMP_RAW_8192BYTE	(8192)
+
+#define BMP_RAW_4MBYTE	(4194304)
+#define BMP_RAW_8MBYTE	(BMP_RAW_4MBYTE*2)
+
 #define MASK_BIT(bit) (1 << (bit)) 
 
 
