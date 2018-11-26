@@ -372,7 +372,7 @@ int Ram4FPGA()
 	
 	usleep(500*1000);
 	setH2FcontrolBit(BIT_SDRAM_FPGA,1);
-	usleep(500*1000);
+	usleep(50);
 	
 	return 0;
 }
@@ -384,9 +384,9 @@ int resetSDRAM()
 	VIP_FR_Stop();
 
 	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
-	usleep(500*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,0);
-	usleep(500*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
 
 	

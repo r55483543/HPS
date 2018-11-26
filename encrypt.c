@@ -40,21 +40,21 @@ int Enable_decrypt()
 int resetFPGA()
 {
 	setH2FcontrolBit(BIT_H2F_SOFTWARE_RESET,1);
-	usleep(200*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_H2F_SOFTWARE_RESET,0);
-	usleep(200*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_H2F_SOFTWARE_RESET,1);
-	usleep(200*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_H2F_GLOBAL_RESET,1);
-	usleep(200*1000);	
+	usleep(50);	
 	setH2FcontrolBit(BIT_H2F_GLOBAL_RESET,0);
-	usleep(200*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_H2F_GLOBAL_RESET,1);	
-	usleep(200*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_H2F_FPGA_START,1);	
-	usleep(200*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_H2F_FPGA_START,0);	
-	usleep(200*1000);
+	usleep(50);
 	setH2FcontrolBit(BIT_H2F_FPGA_START,1);	
 	
 	return 0;
