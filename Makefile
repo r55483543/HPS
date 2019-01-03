@@ -12,7 +12,7 @@ CC = $(CROSS_COMPILE)gcc
 ARCH= arm
 
 build: $(TARGET)
-$(TARGET): main.o chaos.o bmp.o socket_server.o lib_bitmap.o encrypt.o controlH2Fbit.o
+$(TARGET): main.o chaos.o bmp.o socket_server.o lib_bitmap.o encrypt.o controlH2Fbit.o conf.o aes.o aes_c.o
 	$(CC) $(LDFLAGS)   $^ -o $@  
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@

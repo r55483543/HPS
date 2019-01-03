@@ -22,6 +22,7 @@
 /*****Global*****/
 BITMAPFILE tempbmpfile;
 /****************/
+static long PixelOfSum;
 
 int GenBmpFile(unsigned char *pData, const char *filename);
 unsigned char GetBmpData(unsigned char *bitCountPerPix, unsigned int *width, unsigned int *height, const char* filename,unsigned long *memory_vip_frame);
@@ -451,3 +452,12 @@ typedef struct _LI_RGB
     unsigned char g;  
     unsigned char r;  
 }LI_RGB; 
+
+void set_Pixel_sum(long value)
+{
+	PixelOfSum = value;
+}
+
+long get_Pixel_sum(void){
+	return PixelOfSum;
+}

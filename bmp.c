@@ -303,9 +303,9 @@ int initBMP()
 	h2p_vip_frame_reader0_addr= lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + ALT_VIP_VFR_0_BASE ) & ( unsigned long)( HW_REGS_MASK ) );	
 	h2p_memory_addr=axi_virtual_base + ( ( unsigned long  )( DEMO_VGA_FRAME0_ADDR) & ( unsigned long)( HW_FPGA_AXI_MASK ) );
 	h2p_vip_mix_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + ALT_VIP_MIX_0_BASE ) & ( unsigned long)( HW_REGS_MASK ) );		
- 	h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+ 	h2p_lw_h2f_addr=lw_axi_virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_TEMP2_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 
-	setH2FcontrolBitToZero();
+	setH2FcontrolBitToZero(); 
 	setH2FcontrolBit(BIT_RESET_HPS_SDRAM,1);
 	setH2FcontrolBit(BIT_SDRAM_FPGA,0);
 	
@@ -356,6 +356,7 @@ int Ram4FPGA()
 	
 	 //StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET+0x100000);
 	 //StoreBmpData(&pixbitcount,&width,&height, "black.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET);
+	 
 	 memset((void *)pAddress,0,1024*1024*60);
 	 for(i=0;i<1024*1024*4/BMP_RAW_2048BYTE;i++)
 	{
@@ -365,8 +366,8 @@ int Ram4FPGA()
 		memset((void *)pAddress,i,BMP_RAW_2048BYTE);
 		pAddress = pAddress + BMP_RAW_2048BYTE;
 	}*/
-	memset((void *)pAddress,0,1024*1024*60);
-	 StoreBmpData(&pixbitcount,&width,&height, "lenna.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET/*+0x4*/);	
+	memset((void *)pAddress,0,1024*1024*60);  
+	StoreBmpData(&pixbitcount,&width,&height, "lenna_after.bmp",h2p_memory_addr+FR0_FRAME0_OFFSET/*+0x4*/);	
 	VIP_MIX_Stop();
 	VIP_FR_Stop();
 	

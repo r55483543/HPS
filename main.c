@@ -6,9 +6,26 @@
 
 int main()
 {
+					uint8_t md,i;
 	int enter;
+	char filename[20];
+	char RGBname[20];	
+	char RGBAESname[20];	
 	initBMP();
-	//resetDisplay();	
+	//resetDisplay();
+				//printf("enter SWAP type 0~15\n");
+
+/*				//scanf("%d", &md);	
+for(md = 0;md<256;md++){				
+i = Mtest_aes(md);
+if(i!= md)
+{
+	printf("%d round fail\n",md);
+	return 0;
+}
+}
+				return 0;	
+				*/
 	while(1)
 	{
 		printf("===================\n");
@@ -26,6 +43,12 @@ int main()
 		printf("12:resetDisplay\n");
 		printf("13:resetSDRAM\n");
 		printf("14:decrypt\n");
+		printf("100:test AES\n");
+		printf("101:Gen RGB Bmp\n");
+		printf("102:test RGBAES\n");
+		printf("103:Mtest AES\n");
+		printf("104:Recover RGB Bmp\n");
+		printf("105:test invRGBAES\n");		
 		printf("0:Exit\n");
 		printf("===================\n");
 		scanf("%d",&enter);
@@ -73,6 +96,54 @@ int main()
 			case 14:
 				Enable_decrypt();
 				resetFPGA();
+				break;
+			case 100:
+				test_aes();
+				break;
+			case 101:
+
+				printf("Do Gen RGB Bmp\n");				
+				/*printf("enter source BMP filename\n");
+				scanf("%s",filename);
+				printf("enter target BMP filename\n");
+				scanf("%s",RGBname);*/				
+				GenRGBbmp("lenna2.bmp","RGB.bmp");
+				break;
+			case 102:
+
+				printf("Do test RGBAES\n");				
+				//printf("enter source BMP filename\n");
+				//scanf("%s",filename);
+				//printf("enter target BMP filename\n");
+				//scanf("%s",RGBAESname);
+				//GenRGBbmp("lenna2.bmp","RGB.bmp");				
+				test_RGBaes("RGB.bmp","RGBaes.bmp");
+				RecoverRGBbmp("RGBaes.bmp","RecoverRGBaes.bmp");
+				break;
+			case 103:
+
+				printf("enter SWAP type 0~15\n");
+				scanf("%d", &md);				
+				Mtest_aes(md);
+				return 0;
+				break;
+			case 104:
+				printf("Do Recover RGB Bmp\n");				
+				/*printf("enter source BMP filename\n");
+				scanf("%s",filename);
+				printf("enter target BMP filename\n");
+				scanf("%s",RGBname);*/				
+				RecoverRGBbmp("RGB.bmp","RecoverRGB.bmp");
+				break;
+			case 105:
+
+				printf("Do test invRGBAES\n");				
+				//printf("enter source BMP filename\n");
+				//scanf("%s",filename);
+				//printf("enter target BMP filename\n");
+				//scanf("%s",RGBAESname);			
+				test_invRGBaes("RGBaes.bmp","decryptRGB.bmp");
+				RecoverRGBbmp("decryptRGB.bmp","decrypt.bmp");
 				break;				
 			case 0:
 				return 0;

@@ -15,18 +15,22 @@ refer to user manual chapter 7 for details about the demo
 #include "socal/alt_gpio.h"
 #include "hps_0.h"
 #include  "disp_config.h"
+unsigned char *lastChaosAddr;
+long get_Pixel_sum(void);
 
+uint8_t Chaoskey[16];
 
 int genChaos() {
 	FILE *fp;
-	int num, stop;
+	int stop;
 	float shift;
 	unsigned u;
 	void *virtual_base;
 	int fd;
 	float x,y,z,w;
+	long num;
 
-	void *h2p_lw_chaos_done_addr, *h2p_lw_chaos_reset_addr, /**h2p_lw_chaos_shift_addr,*/ *h2p_lw_chaos_step_addr;
+	void *h2p_lw_chaos_done_addr, *h2p_lw_chaos_reset_addr, *h2p_lw_chaos_shift_addr, *h2p_lw_chaos_step_addr;
 	void *h2p_lw_chaos_x_addr, *h2p_lw_chaos_y_addr, *h2p_lw_chaos_z_addr, *h2p_lw_chaos_w_addr;
 	// map the address space for the LED registers into user space so we can interact with them.
 	// we'll actually map in the entire CSR span of the HPS since we want to access various registers within that span
@@ -47,7 +51,7 @@ int genChaos() {
 	h2p_lw_chaos_step_addr=virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_STEP_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 	h2p_lw_chaos_done_addr=virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_DONE_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 	h2p_lw_chaos_reset_addr=virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_RESET_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
-	//h2p_lw_chaos_shift_addr=virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+	h2p_lw_chaos_shift_addr=virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_SHIFT_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 	h2p_lw_chaos_x_addr=virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_X_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 	h2p_lw_chaos_y_addr=virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_Y_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 	h2p_lw_chaos_z_addr=virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_CHAOS_Z_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
@@ -85,8 +89,12 @@ while(1) {
 			break;
 		
 		// 取得要計算的 STEP 次數，以及 SHIFT 值
-		printf("Insert Number of Chaos Key Steps\n");
-		scanf("%d", &num);
+		//printf("Insert Number of Chaos Key Steps\n");
+		//scanf("%d", &num);
+		num = 3000+get_Pixel_sum()%10000;
+		
+		
+		
 		//printf("Insert Shift of Chaos Key\n");
 		//scanf("%f", &shift);
 		shift = 1;
@@ -110,35 +118,57 @@ while(1) {
 		printf("start step %d\n", *(int*)h2p_lw_chaos_step_addr);
 		// 創建愈接收數量金鑰的動態陣列
 		//alt_u8 *list = malloc(num * sizeof(alt_u8));
-		int i = 0;
-
-
+		long i = 0;
+		int j = 0;
+		float *ptempAddress = NULL;
+		unsigned char *ptAddr=NULL;
+		ptempAddress = (h2p_memory_addr+BMP_RAW_48MBYTE);
+		ptAddr = (h2p_memory_addr+BMP_RAW_48MBYTE);
+		printf("ptempAddress %x\n",ptempAddress);
+		printf("ptAddr %x\n",ptAddr);
 		// 循環啟動 Chaos_Key Generator 運算金鑰，並存入動態陣列
 		while(1) {
 			//printf("enter while i = %d\n",i);
 			if(*(int*)h2p_lw_chaos_done_addr == 0)
 				continue;
 			x = *(float*)h2p_lw_chaos_x_addr;
+			*ptempAddress = x;
+			ptempAddress = ptempAddress+1;
 //			i++;
 //			if(i == num)
 //				break;
 			y = *(float*)h2p_lw_chaos_y_addr;
+			*ptempAddress = y;
+			ptempAddress = ptempAddress+1;
 //			i++;
 //			if(i == num)
 //				break;			
 			z = *(float*)h2p_lw_chaos_z_addr;
+			*ptempAddress = z;
+			ptempAddress = ptempAddress+1;			
 //			i++;
 //			if(i == num)
 //				break;
 			w = *(float*)h2p_lw_chaos_w_addr;
-			printf("round %d\n",i);
+			*ptempAddress = w;
+			ptempAddress = ptempAddress+1;
+			//printf("round %d\n",i);
 			i++;
-			if(i == num)
+			if(i == num){
+				memset(Chaoskey,0,sizeof(Chaoskey));
+				for(j=0;j<16;j++){
+					printf("ptAddr+%d = %x \n", j,*(ptAddr+j));
+					Chaoskey[j] = (uint8_t)*(ptAddr+j);
+				}					
 				break;
-			printf("x = %1.7f \n", x);
-			printf("y = %1.7f \n", y);
-			printf("z = %1.7f \n", z);
-			printf("w = %1.7f \n", w);	
+			}
+			//printf("x = %1.7f \n", x);
+			//printf("y = %1.7f \n", y);
+			//printf("z = %1.7f \n", z);
+			//printf("w = %1.7f \n", w);
+
+			ptAddr = ptAddr+16;		
+			
 			fprintf(fp,"%1.7f %1.7f %1.7f %1.7f\r\n",x,y,z,w);			
 			/*
 			list[i] = IORD_ALTERA_AVALON_PIO_DATA(PIO_CHAOS_X_BASE);
@@ -162,6 +192,9 @@ while(1) {
 			*(uint8_t *)h2p_lw_chaos_step_addr = 1;
 
 		}
+		lastChaosAddr = ptAddr;
+		printf("0000   ptAddr %x\n",ptAddr);
+		printf("0000   lastChaosAddr %x\n",lastChaosAddr);
 		*(uint8_t *)h2p_lw_chaos_step_addr = 0;
 		printf("done\n");
 		// 列出最後 4 個金鑰
@@ -184,4 +217,20 @@ while(1) {
 	close( fd );
 
 	return( 0 );
+}
+
+/*
+void getlastChaosAddr(unsigned char* addr)
+{
+	printf("getlastChaosAddr   lastChaosAddr %x\n",lastChaosAddr);
+	addr = lastChaosAddr;
+}
+*/
+void getChaosKey(uint8_t key[16])
+{
+	uint8_t i;
+	for(i=0;i<16;i++)
+	{
+		key[i] = Chaoskey[i];
+	}
 }

@@ -44,13 +44,16 @@
 #define BMP_ORG_RAW_ADDRESS	(0x500000) //(0xA01000)
 #define BMP_ENC_RAW_ADDRESS	(0x500000)
 
+#define BMP_RAW_1BYTE_TO_BIT	(8)
 #define BMP_RAW_1024BYTE	(1024)
 #define BMP_RAW_2048BYTE	(2048)
 #define BMP_RAW_4096BYTE	(4096)
 #define BMP_RAW_8192BYTE	(8192)
 
+
 #define BMP_RAW_4MBYTE	(4194304)
 #define BMP_RAW_8MBYTE	(BMP_RAW_4MBYTE*2)
+#define BMP_RAW_48MBYTE		(4194304*12)
 
 #define MASK_BIT(bit) (1 << (bit)) 
 
@@ -66,6 +69,8 @@
 #define BIT_F2H_AES_D_DONE 			(int)3
 #define BIT_F2H_AES_E_DONE 			(int)4
 
+typedef unsigned char uint8_t;
+
 extern unsigned long *h2p_lw_axi_addr;
 extern unsigned long *h2p_vip_frame_reader0_addr;
 extern unsigned long *h2p_memory_addr;
@@ -73,7 +78,7 @@ extern unsigned long *h2p_vip_mix_addr;
 extern void *lw_axi_virtual_base;
 extern void *axi_virtual_base;
 extern void *h2p_lw_h2f_addr;
-
+unsigned char *lastChaosAddr;
 
 extern int showBMP();
 extern int genChaos();

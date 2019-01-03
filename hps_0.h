@@ -106,6 +106,30 @@
 #define PIO_CHAOS_TEMP_RESET_VALUE 0
 
 /*
+ * Macros for device 'pio_chaos_temp2', class 'altera_avalon_pio'
+ * The macros are prefixed with 'PIO_CHAOS_TEMP2_'.
+ * The prefix is the slave descriptor.
+ */
+#define PIO_CHAOS_TEMP2_COMPONENT_TYPE altera_avalon_pio
+#define PIO_CHAOS_TEMP2_COMPONENT_NAME pio_chaos_temp2
+#define PIO_CHAOS_TEMP2_BASE 0x290
+#define PIO_CHAOS_TEMP2_SPAN 16
+#define PIO_CHAOS_TEMP2_END 0x29f
+#define PIO_CHAOS_TEMP2_BIT_CLEARING_EDGE_REGISTER 0
+#define PIO_CHAOS_TEMP2_BIT_MODIFYING_OUTPUT_REGISTER 0
+#define PIO_CHAOS_TEMP2_CAPTURE 0
+#define PIO_CHAOS_TEMP2_DATA_WIDTH 32
+#define PIO_CHAOS_TEMP2_DO_TEST_BENCH_WIRING 0
+#define PIO_CHAOS_TEMP2_DRIVEN_SIM_VALUE 0
+#define PIO_CHAOS_TEMP2_EDGE_TYPE NONE
+#define PIO_CHAOS_TEMP2_FREQ 50000000
+#define PIO_CHAOS_TEMP2_HAS_IN 0
+#define PIO_CHAOS_TEMP2_HAS_OUT 1
+#define PIO_CHAOS_TEMP2_HAS_TRI 0
+#define PIO_CHAOS_TEMP2_IRQ_TYPE NONE
+#define PIO_CHAOS_TEMP2_RESET_VALUE 0
+
+/*
  * Macros for device 'pio_chaos_done', class 'altera_avalon_pio'
  * The macros are prefixed with 'PIO_CHAOS_DONE_'.
  * The prefix is the slave descriptor.
